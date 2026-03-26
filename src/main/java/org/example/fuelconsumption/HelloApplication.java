@@ -22,18 +22,14 @@ public class HelloApplication extends Application {
     public void start(Stage stage) throws IOException {
         this.stage = stage;
 
-        Locale enUS = new Locale("en", "US");
-
-        ResourceBundle bundle = ResourceBundle.getBundle(
-                "fuelConsumptionBundle_en_US"
-        );
+        ResourceBundle bundle = ResourceBundle.getBundle("messages", new Locale("en", "US"));
 
         FXMLLoader fxmlLoader = new FXMLLoader(
                 HelloApplication.class.getResource("hello-view.fxml"),
                 bundle
         );
 
-        Scene scene = new Scene(fxmlLoader.load(), 320, 240);
+        Scene scene = new Scene(fxmlLoader.load(), 420, 320);
 
         HelloController controller = fxmlLoader.getController();
         controller.setApp(this);

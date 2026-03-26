@@ -10,29 +10,33 @@
 <VBox fx:id="vBox"
       xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="org.example.fuelconsumption.HelloController">
+      fx:controller="org.example.fuelconsumption.HelloController"
+      spacing="8.0">
     <padding>
         <Insets top="20.0" right="20.0" bottom="20.0" left="20.0"/>
     </padding>
 
     <children>
-        <Label fx:id="lblDistance" text="%distance.label" />
-        <TextField fx:id="txtDistance" promptText="" />
+        <Label fx:id="lblDistance" text="%distance.label" maxWidth="1.7976931348623157E308" />
+        <TextField fx:id="txtDistance" />
 
-        <Label fx:id="lblFuel" text="%fuel.label" />
-        <TextField fx:id="txtFuel" promptText="" />
+        <Label fx:id="lblConsumption" text="%consumption.label" maxWidth="1.7976931348623157E308" />
+        <TextField fx:id="txtConsumption" />
+
+        <Label fx:id="lblPrice" text="%price.label" maxWidth="1.7976931348623157E308" />
+        <TextField fx:id="txtPrice" />
 
         <Button fx:id="btnCalculate" text="%calculate.button" onAction="#handleCalculate" />
 
-        <HBox alignment="CENTER" spacing="10.0">
+        <HBox fx:id="languageBox" alignment="CENTER" spacing="10.0">
             <children>
-                <Button text="EN" onAction="#handleEnglish" />
-                <Button text="FR" onAction="#handleFrench" />
-                <Button text="JP" onAction="#handleJapanese" />
-                <Button text="FA" onAction="#handlePersian" />
+                <Button fx:id="btnEN" text="EN" onAction="#handleEnglish" />
+                <Button fx:id="btnFR" text="FR" onAction="#handleFrench" />
+                <Button fx:id="btnJP" text="JP" onAction="#handleJapanese" />
+                <Button fx:id="btnIR" text="IR" onAction="#handlePersian" />
             </children>
         </HBox>
 
-        <Label fx:id="lblResult" text="" />
+        <Label fx:id="lblResult" text="" wrapText="true" maxWidth="1.7976931348623157E308" />
     </children>
 </VBox>
