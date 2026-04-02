@@ -11,13 +11,14 @@ import javafx.scene.layout.VBox;
 
 import java.text.MessageFormat;
 import java.util.Locale;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
+import java.util.Map;
 
 public class HelloController {
 
     private HelloApplication app;
-    private ResourceBundle rb;
+    private LocalizationService localizationService;
+    private CalculationService calculationService;
+    private String currentLanguage = "en_US";
     private char orientation = 'L';
 
     @FXML
@@ -52,18 +53,24 @@ public class HelloController {
 
     public void setApp(HelloApplication app) {
         this.app = app;
+        this.localizationService = app.getLocalizationService();
+        this.calculationService = app.getCalculationService();
+    }
+
+    public void initializeApp() {
+        setLanguage("en_US");
+        handleOrientation();
     }
 
     public void updateWindowTitle() {
-        if (app != null && rb != null) {
-            app.setTitle(rb.getString("app.title") + " Elias Rinne");
+        if (app != null) {
+            app.setTitle(getText("app.title") + " Elias Rinne");
         }
     }
 
     @FXML
     private void initialize() {
-        updateLanguage(ResourceBundle.getBundle("messages", new Locale("en", "US")));
-        handleOrientation();
+        // JavaFX lifecycle hook. Actual app initialization is done in initializeApp().
     }
 
     @FXML
@@ -74,23 +81,37 @@ public class HelloController {
             double pricePerLiter = Double.parseDouble(txtPrice.getText());
 
             if (distance <= 0 || consumptionPer100Km < 0 || pricePerLiter < 0) {
-                lblResult.setText(rb.getString("invalid.input"));
+                lblResult.setText(getText("invalid.input"));
                 return;
             }
 
             double totalFuel = (consumptionPer100Km / 100.0) * distance;
             double totalCost = totalFuel * pricePerLiter;
 
-            lblResult.setText(
-                    MessageFormat.format(
-                            rb.getString("result.label"),
-                            String.format(Locale.US, "%.2f", totalFuel),
-                            String.format(Locale.US, "%.2f", totalCost)
-                    )
+            String formattedResult = MessageFormat.format(
+                    getText("result.label"),
+                    String.format(Locale.US, "%.2f", totalFuel),
+                    String.format(Locale.US, "%.2f", totalCost)
             );
 
+            CalculationRecord record = new CalculationRecord(
+                    distance,
+                    consumptionPer100Km,
+                    pricePerLiter,
+                    totalFuel,
+                    totalCost,
+                    currentLanguage
+            );
+
+            try {
+                calculationService.saveCalculation(record);
+                lblResult.setText(formattedResult + " | " + getText("save.success"));
+            } catch (Exception e) {
+                lblResult.setText(formattedResult + " | " + getText("save.error"));
+            }
+
         } catch (NumberFormatException e) {
-            lblResult.setText(rb.getString("invalid.input"));
+            lblResult.setText(getText("invalid.input"));
         }
     }
 
@@ -137,47 +158,51 @@ public class HelloController {
         }
     }
 
-    private void updateLanguage(ResourceBundle newBundle) {
+    private void setLanguage(String language) {
+        currentLanguage = language;
         try {
-            this.rb = newBundle;
-
-            lblDistance.setText(rb.getString("distance.label"));
-            lblConsumption.setText(rb.getString("consumption.label"));
-            lblPrice.setText(rb.getString("price.label"));
-            btnCalculate.setText(rb.getString("calculate.button"));
+            localizationService.loadStrings(language);
+            lblDistance.setText(getText("distance.label"));
+            lblConsumption.setText(getText("consumption.label"));
+            lblPrice.setText(getText("price.label"));
+            btnCalculate.setText(getText("calculate.button"));
             lblResult.setText("");
-
             updateWindowTitle();
-        } catch (MissingResourceException e) {
-            lblResult.setText("Missing resource file.");
+        } catch (Exception e) {
+            lblResult.setText("Database localization error.");
         }
+    }
+
+    private String getText(String key) {
+        String value = localizationService.getString(key);
+        return value != null ? value : ('!' + key + '!');
     }
 
     @FXML
     private void handleEnglish() {
         orientation = 'L';
-        updateLanguage(ResourceBundle.getBundle("messages", new Locale("en", "US")));
+        setLanguage("en_US");
         handleOrientation();
     }
 
     @FXML
     private void handleFrench() {
         orientation = 'L';
-        updateLanguage(ResourceBundle.getBundle("messages", new Locale("fr", "FR")));
+        setLanguage("fr_FR");
         handleOrientation();
     }
 
     @FXML
     private void handleJapanese() {
         orientation = 'L';
-        updateLanguage(ResourceBundle.getBundle("messages", new Locale("ja", "JP")));
+        setLanguage("ja_JP");
         handleOrientation();
     }
 
     @FXML
     private void handlePersian() {
         orientation = 'R';
-        updateLanguage(ResourceBundle.getBundle("messages", new Locale("fa", "IR")));
+        setLanguage("fa_IR");
         handleOrientation();
     }
 }

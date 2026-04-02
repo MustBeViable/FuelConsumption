@@ -17,16 +17,16 @@
     </padding>
 
     <children>
-        <Label fx:id="lblDistance" text="%distance.label" maxWidth="1.7976931348623157E308" />
+        <Label fx:id="lblDistance" text="Distance (km)" maxWidth="1.7976931348623157E308" />
         <TextField fx:id="txtDistance" />
 
-        <Label fx:id="lblConsumption" text="%consumption.label" maxWidth="1.7976931348623157E308" />
+        <Label fx:id="lblConsumption" text="Fuel Consumption (L/100 km)" maxWidth="1.7976931348623157E308" />
         <TextField fx:id="txtConsumption" />
 
-        <Label fx:id="lblPrice" text="%price.label" maxWidth="1.7976931348623157E308" />
+        <Label fx:id="lblPrice" text="Fuel Price (per liter)" maxWidth="1.7976931348623157E308" />
         <TextField fx:id="txtPrice" />
 
-        <Button fx:id="btnCalculate" text="%calculate.button" onAction="#handleCalculate" />
+        <Button fx:id="btnCalculate" text="Calculate Trip Cost" onAction="#handleCalculate" />
 
         <HBox fx:id="languageBox" alignment="CENTER" spacing="10.0">
             <children>

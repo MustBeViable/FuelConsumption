@@ -6,11 +6,11 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.util.Locale;
-import java.util.ResourceBundle;
 
 public class HelloApplication extends Application {
     private Stage stage;
+    private final LocalizationService localizationService = new LocalizationService();
+    private final CalculationService calculationService = new CalculationService();
 
     public void setTitle(String title) {
         if (stage != null) {
@@ -18,22 +18,27 @@ public class HelloApplication extends Application {
         }
     }
 
+    public LocalizationService getLocalizationService() {
+        return localizationService;
+    }
+
+    public CalculationService getCalculationService() {
+        return calculationService;
+    }
+
     @Override
     public void start(Stage stage) throws IOException {
         this.stage = stage;
 
-        ResourceBundle bundle = ResourceBundle.getBundle("messages", new Locale("en", "US"));
-
         FXMLLoader fxmlLoader = new FXMLLoader(
-                HelloApplication.class.getResource("hello-view.fxml"),
-                bundle
+                HelloApplication.class.getResource("hello-view.fxml")
         );
 
         Scene scene = new Scene(fxmlLoader.load(), 420, 320);
 
         HelloController controller = fxmlLoader.getController();
         controller.setApp(this);
-        controller.updateWindowTitle();
+        controller.initializeApp();
 
         stage.setScene(scene);
         stage.show();
