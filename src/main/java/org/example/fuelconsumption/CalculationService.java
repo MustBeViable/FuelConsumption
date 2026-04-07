@@ -12,16 +12,16 @@ public class CalculationService {
             VALUES (?, ?, ?, ?, ?, ?)
             """;
 
-    public void saveCalculation(CalculationRecord record) {
+    public void saveCalculation(CalculationRecord rec) {
         try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(INSERT_SQL)) {
 
-            statement.setDouble(1, record.getDistance());
-            statement.setDouble(2, record.getConsumption());
-            statement.setDouble(3, record.getPrice());
-            statement.setDouble(4, record.getTotalFuel());
-            statement.setDouble(5, record.getTotalCost());
-            statement.setString(6, record.getLanguage());
+            statement.setDouble(1, rec.getDistance());
+            statement.setDouble(2, rec.getConsumption());
+            statement.setDouble(3, rec.getPrice());
+            statement.setDouble(4, rec.getTotalFuel());
+            statement.setDouble(5, rec.getTotalCost());
+            statement.setString(6, rec.getLanguage());
 
             statement.executeUpdate();
         } catch (SQLException e) {

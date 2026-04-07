@@ -11,7 +11,6 @@ import javafx.scene.layout.VBox;
 
 import java.text.MessageFormat;
 import java.util.Locale;
-import java.util.Map;
 
 public class HelloController {
 
@@ -94,7 +93,7 @@ public class HelloController {
                     String.format(Locale.US, "%.2f", totalCost)
             );
 
-            CalculationRecord record = new CalculationRecord(
+            CalculationRecord rec = new CalculationRecord(
                     distance,
                     consumptionPer100Km,
                     pricePerLiter,
@@ -104,7 +103,7 @@ public class HelloController {
             );
 
             try {
-                calculationService.saveCalculation(record);
+                calculationService.saveCalculation(rec);
                 lblResult.setText(formattedResult + " | " + getText("save.success"));
             } catch (Exception e) {
                 lblResult.setText(formattedResult + " | " + getText("save.error"));
