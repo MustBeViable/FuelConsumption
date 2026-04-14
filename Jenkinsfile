@@ -47,21 +47,22 @@ pipeline {
       }
     }
 
-    stage('SonarQube Analysis') {
-      steps {
-        withSonarQubeEnv(env.SONARQUBE_SERVER) {
-          withCredentials([string(credentialsId: env.SONAR_TOKEN_CRED, variable: 'SONAR_TOKEN')]) {
-            sh '''
-              mvn -B sonar:sonar \
-                -Dsonar.projectKey=fuelconsumption \
-                -Dsonar.projectName=FuelConsumption \
-                -Dsonar.host.url=$SONAR_HOST_URL \
-                -Dsonar.token=$SONAR_TOKEN
-            '''
-          }
-        }
+stage('SonarQube Analysis') {
+  steps {
+    withSonarQubeEnv(env.SONARQUBE_SERVER) {
+      withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_TOKEN')]) {
+        sh '''
+          echo "Using SonarQube host: $SONAR_HOST_URL"
+          mvn -B sonar:sonar \
+            -Dsonar.projectKey=fuelconsumption \
+            -Dsonar.projectName=FuelConsumption \
+            -Dsonar.host.url=$SONAR_HOST_URL \
+            -Dsonar.token=$SONAR_TOKEN
+        '''
       }
     }
+  }
+}
 
     stage('Quality Gate') {
       steps {
