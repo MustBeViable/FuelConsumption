@@ -52,11 +52,14 @@ pipeline {
 
     stage('SonarQube Analysis') {
       steps {
-        withSonarQubeEnv("${SONARQUBE_SERVER}") {
+        withSonarQubeEnv(env.SONARQUBE_SERVER) {
           sh '''
+            echo "Using SonarQube host: $SONAR_HOST_URL"
             mvn -B sonar:sonar \
               -Dsonar.projectKey=fuelconsumption \
-              -Dsonar.projectName=FuelConsumption
+              -Dsonar.projectName=FuelConsumption \
+              -Dsonar.host.url=$SONAR_HOST_URL \
+              -Dsonar.token=$SONAR_AUTH_TOKEN
           '''
         }
       }
