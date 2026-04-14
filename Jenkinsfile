@@ -1,75 +1,89 @@
 pipeline {
-  agent any
+    agent any
 
-  options {
-    skipDefaultCheckout(false)
-  }
-
-  environment {
-    PATH       = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-    JAVA_HOME  = "/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home"
-    APP_IMAGE  = "fuelconsumption-app"
-    DB_IMAGE   = "fuelconsumption-db"
-    IMAGE_TAG  = "latest"
-  }
-
-  stages {
-    stage('Checkout') {
-      steps {
-        checkout scm
-      }
+    tools {
+        maven 'Maven3'
     }
 
-    stage('Verify Tools') {
-      steps {
-        sh 'echo "PATH=$PATH"'
-        sh 'echo "JAVA_HOME=$JAVA_HOME"'
-        sh 'which java && java -version'
-        sh 'which mvn && mvn -v'
-        sh 'which docker && docker --version'
-        sh 'docker compose version || true'
-      }
-    }
+environment {
+  PATH       = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+  JAVA_HOME  = "/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home"
+  APP_IMAGE  = "fuelconsumption-app"
+  DB_IMAGE   = "fuelconsumption-db"
+  IMAGE_TAG  = "latest"
+}
 
-    stage('Build') {
-      steps {
-        sh 'mvn -B clean compile'
-      }
-    }
-
-    stage('Test') {
-      steps {
-        sh 'mvn -B test'
-      }
-      post {
-        always {
-          junit testResults: 'target/surefire-reports/*.xml', allowEmptyResults: true
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
         }
-      }
-    }
 
-    stage('Package') {
-      steps {
-        sh 'mvn -B package -DskipTests'
-      }
-    }
+        stage('Verify Tools') {
+            steps {
+                sh 'echo PATH=$PATH'
+                sh 'java -version'
+                sh 'mvn -version'
+                sh 'docker --version'
+            }
+        }
 
-    stage('Build DB Image') {
-      steps {
-        sh 'docker build --platform=linux/amd64 -t "${DB_IMAGE}:${IMAGE_TAG}" ./db'
-      }
-    }
+        stage('Build and Test') {
+            steps {
+                sh 'mvn clean verify'
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
+                }
+            }
+        }
 
-    stage('Build App Image') {
-      steps {
-        sh 'docker build --platform=linux/amd64 -t "${APP_IMAGE}:${IMAGE_TAG}" .'
-      }
-    }
-  }
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv("${SONARQUBE_SERVER}") {
+                    sh '''
+                        mvn sonar:sonar \
+                          -Dsonar.projectKey=fuelconsumption \
+                          -Dsonar.projectName=FuelConsumption \
+                          -Dsonar.host.url=$SONAR_HOST_URL \
+                          -Dsonar.token=$SONAR_AUTH_TOKEN
+                    '''
+                }
+            }
+        }
 
-  post {
-    always {
-      archiveArtifacts artifacts: 'target/*.jar,db/schema.sql,docker-compose.yml,Dockerfile,Jenkinsfile,README.md', allowEmptyArchive: true
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+        stage('Package App') {
+            steps {
+                sh 'mvn package -DskipTests'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    docker.build("${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG}")
+                }
+            }
+        }
+
+        stage('Push Docker Image to Docker Hub') {
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKERHUB_CREDENTIALS_ID) {
+                        docker.image("${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG}").push()
+                    }
+                }
+            }
+        }
     }
-  }
 }
