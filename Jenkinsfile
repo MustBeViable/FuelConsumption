@@ -1,10 +1,6 @@
 pipeline {
   agent any
 
-  options {
-    skipDefaultCheckout(false)
-  }
-
   environment {
     PATH              = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
     JAVA_HOME         = "/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home"
@@ -12,6 +8,7 @@ pipeline {
     DB_IMAGE          = "fuelconsumption-db"
     IMAGE_TAG         = "latest"
     SONARQUBE_SERVER  = "SonarQubeServer"
+    SONAR_TOKEN_CRED  = "sonar-token"
   }
 
   stages {
@@ -23,12 +20,12 @@ pipeline {
 
     stage('Verify Tools') {
       steps {
-        sh 'echo "PATH=$PATH"'
-        sh 'echo "JAVA_HOME=$JAVA_HOME"'
+        sh 'echo PATH=$PATH'
+        sh 'echo JAVA_HOME=$JAVA_HOME'
         sh 'which java && java -version'
         sh 'which mvn && mvn -v'
         sh 'which docker && docker --version'
-        sh 'docker compose version || true'
+        sh 'docker compose version'
       }
     }
 
@@ -53,14 +50,15 @@ pipeline {
     stage('SonarQube Analysis') {
       steps {
         withSonarQubeEnv(env.SONARQUBE_SERVER) {
-          sh '''
-            echo "Using SonarQube host: $SONAR_HOST_URL"
-            mvn -B sonar:sonar \
-              -Dsonar.projectKey=fuelconsumption \
-              -Dsonar.projectName=FuelConsumption \
-              -Dsonar.host.url=$SONAR_HOST_URL \
-              -Dsonar.token=$SONAR_AUTH_TOKEN
-          '''
+          withCredentials([string(credentialsId: env.SONAR_TOKEN_CRED, variable: 'SONAR_TOKEN')]) {
+            sh '''
+              mvn -B sonar:sonar \
+                -Dsonar.projectKey=fuelconsumption \
+                -Dsonar.projectName=FuelConsumption \
+                -Dsonar.host.url=$SONAR_HOST_URL \
+                -Dsonar.token=$SONAR_TOKEN
+            '''
+          }
         }
       }
     }
@@ -94,7 +92,7 @@ pipeline {
 
   post {
     always {
-      archiveArtifacts artifacts: 'target/*.jar,target/site/jacoco/**/*,db/schema.sql,docker-compose.yml,Dockerfile,Jenkinsfile,README.md', allowEmptyArchive: true
+      archiveArtifacts artifacts: 'target/*.jar,target/site/jacoco/**/*,docker-compose.yml,Dockerfile,Jenkinsfile', allowEmptyArchive: true
     }
   }
 }
